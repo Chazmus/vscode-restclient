@@ -686,6 +686,12 @@
           "default": true,
           "scope": "resource",
           "description": "Enable/disable using filename from 'content-disposition' header, when saving response body"
+        },
+        "rest-client.environmentVariableFiles": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "description": "List of environment variable files to load"
         }
       }
     },

@@ -46,6 +46,7 @@ REST Client allows you to send HTTP request and view the response in Visual Stud
     - File variables can reference both custom and system variables
     - Support environment switch
     - Support shared environment to provide variables that available in all environments
+    - Support loading environment variables from specified files
 * Generate code snippets for __HTTP request__ in languages like `Python`, `JavaScript` and more!
 * Remember Cookies for subsequent requests
 * Proxy support
@@ -738,6 +739,7 @@ exchange | Preview the whole HTTP exchange(request and response)
 * `rest-client.enableSendRequestCodeLens`: Enable/disable sending request CodeLens in request file. (Default is __true__)
 * `rest-client.enableCustomVariableReferencesCodeLens`: Enable/disable custom variable references CodeLens in request file. (Default is __true__)
 * `rest-client.useContentDispositionFilename`: Use `filename=` from `'content-disposition'` header (if available), to determine output file name, when saving response body. (Default is __true__)
+* `rest-client.environmentVariableFiles`: List of environment variable files to load. (Default is __[]__)
 
 Rest Client extension respects the proxy settings made for Visual Studio Code (`http.proxy` and `http.proxyStrictSSL`). Only HTTP and HTTPS proxies are supported.
 

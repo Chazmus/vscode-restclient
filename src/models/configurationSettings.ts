@@ -50,6 +50,7 @@ export interface IRestClientSettings {
     readonly enableSendRequestCodeLens: boolean;
     readonly enableCustomVariableReferencesCodeLens: boolean;
     readonly useContentDispositionFilename: boolean;
+    readonly environmentVariableFiles: string[]; // Pb27d
 }
 
 export class SystemSettings implements IRestClientSettings {
@@ -86,6 +87,7 @@ export class SystemSettings implements IRestClientSettings {
     private _enableSendRequestCodeLens: boolean;
     private _enableCustomVariableReferencesCodeLens: boolean;
     private _useContentDispositionFilename: boolean;
+    private _environmentVariableFiles: string[]; // Pb27d
 
     public get followRedirect() {
         return this._followRedirect;
@@ -219,6 +221,10 @@ export class SystemSettings implements IRestClientSettings {
         return this._useContentDispositionFilename;
     }
 
+    public get environmentVariableFiles() { // Pb27d
+        return this._environmentVariableFiles;
+    }
+
     private readonly brackets: CharacterPair[];
 
     private static _instance: SystemSettings;
@@ -275,6 +281,7 @@ export class SystemSettings implements IRestClientSettings {
 
         this._environmentVariables = restClientSettings.get<{ [key: string]: { [key: string]: string } }>("environmentVariables", {});
         this._mimeAndFileExtensionMapping = restClientSettings.get<{ [key: string]: string }>("mimeAndFileExtensionMapping", {});
+        this._environmentVariableFiles = restClientSettings.get<string[]>("environmentVariableFiles", []); // P2ebd
 
         this._previewResponseInUntitledDocument = restClientSettings.get<boolean>("previewResponseInUntitledDocument", false);
         this._previewColumn = this.parseColumn(restClientSettings.get<string>("previewColumn", "two"));
@@ -469,6 +476,10 @@ export class RestClientSettings implements IRestClientSettings {
 
     public get useContentDispositionFilename() {
         return this.systemSettings.useContentDispositionFilename;
+    }
+
+    public get environmentVariableFiles() { // Pb27d
+        return this.systemSettings.environmentVariableFiles;
     }
 
     private readonly systemSettings = SystemSettings.Instance;

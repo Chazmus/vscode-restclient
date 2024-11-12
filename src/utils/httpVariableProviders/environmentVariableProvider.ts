@@ -4,6 +4,7 @@ import { SystemSettings } from '../../models/configurationSettings';
 import { ResolveErrorMessage } from '../../models/httpVariableResolveResult';
 import { VariableType } from '../../models/variableType';
 import { HttpVariable, HttpVariableProvider } from './httpVariableProvider';
+import * as fs from 'fs-extra';
 
 export class EnvironmentVariableProvider implements HttpVariableProvider {
     private static _instance: EnvironmentVariableProvider;
@@ -57,6 +58,17 @@ export class EnvironmentVariableProvider implements HttpVariableProvider {
 
         // Resolve mappings from current environment
         this.mapEnvironmentVariables(environmentName, currentEnvironmentVariables, currentEnvironmentVariables);
+
+        // Load environment variables from specified files
+        const environmentVariableFiles = this._settings.environmentVariableFiles;
+        if (environmentVariableFiles && environmentVariableFiles.length > 0) {
+            for (const file of environmentVariableFiles) {
+                const fileVariables = await this.loadEnvironmentVariablesFromFile(file);
+                Object.assign(sharedEnvironmentVariables, fileVariables);
+                Object.assign(currentEnvironmentVariables, fileVariables);
+            }
+        }
+
         return {...sharedEnvironmentVariables, ...currentEnvironmentVariables};
     }
 
@@ -74,6 +86,16 @@ export class EnvironmentVariableProvider implements HttpVariableProvider {
             current[key] = current[key]!.replace(
                 variableRegex,
                 shared[referenceKey]!);
+        }
+    }
+
+    private async loadEnvironmentVariablesFromFile(filePath: string): Promise<{ [key: string]: string }> {
+        try {
+            const fileContent = await fs.readFile(filePath, 'utf8');
+            return JSON.parse(fileContent);
+        } catch (error) {
+            console.error(`Failed to load environment variables from file: ${filePath}`, error);
+            return {};
         }
     }
 }

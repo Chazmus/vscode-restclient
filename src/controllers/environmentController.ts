@@ -4,6 +4,7 @@ import { SystemSettings } from '../models/configurationSettings';
 import { trace } from "../utils/decorator";
 import { EnvironmentStatusEntry } from '../utils/environmentStatusBarEntry';
 import { UserDataManager } from '../utils/userDataManager';
+import * as fs from 'fs-extra';
 
 type EnvironmentPickItem = QuickPickItem & { name: string };
 
@@ -55,6 +56,24 @@ export class EnvironmentController {
         this.environmentStatusEntry.update(item.label);
 
         await UserDataManager.setEnvironment(item);
+
+        // Load environment variables from file if specified
+        const environmentVariableFiles = this.settings.environmentVariableFiles;
+        if (environmentVariableFiles && environmentVariableFiles.length > 0) {
+            for (const file of environmentVariableFiles) {
+                await this.loadEnvironmentVariablesFromFile(file);
+            }
+        }
+    }
+
+    private async loadEnvironmentVariablesFromFile(filePath: string) {
+        try {
+            const fileContent = await fs.readFile(filePath, 'utf8');
+            const variables = JSON.parse(fileContent);
+            Object.assign(this.settings.environmentVariables, variables);
+        } catch (error) {
+            console.error(`Failed to load environment variables from file: ${filePath}`, error);
+        }
     }
 
     public static async create(): Promise<EnvironmentController> {
