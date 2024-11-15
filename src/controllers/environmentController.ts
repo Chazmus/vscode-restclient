@@ -1,4 +1,5 @@
-import { EventEmitter, QuickPickItem, window } from 'vscode';
+import { EventEmitter, QuickPickItem, window, workspace } from 'vscode';
+import * as path from 'path';
 import * as Constants from '../common/constants';
 import { SystemSettings } from '../models/configurationSettings';
 import { trace } from "../utils/decorator";
@@ -34,9 +35,21 @@ export class EnvironmentController {
 
     @trace('Switch Environment')
     public async switchEnvironment() {
+
+        // Load environment variables from file if specified
+        const environmentVariableFiles = this.settings.environmentVariableFiles;
+        let envVars = {};
+        if (environmentVariableFiles && environmentVariableFiles.length > 0) {
+            for (const file of environmentVariableFiles) {
+                const variables = await this.loadEnvironmentVariablesFromFile(file);
+                envVars = this.mergeObjects(envVars, variables);
+            }
+        }
+
+        envVars = this.mergeObjects(envVars, this.settings.environmentVariables);
         // Add no environment at the top
         const userEnvironments: EnvironmentPickItem[] =
-            Object.keys(this.settings.environmentVariables)
+            Object.keys(envVars)
                 .filter(name => name !== EnvironmentController.sharedEnvironmentName)
                 .map(name => ({
                     name,
@@ -57,20 +70,14 @@ export class EnvironmentController {
 
         await UserDataManager.setEnvironment(item);
 
-        // Load environment variables from file if specified
-        const environmentVariableFiles = this.settings.environmentVariableFiles;
-        if (environmentVariableFiles && environmentVariableFiles.length > 0) {
-            for (const file of environmentVariableFiles) {
-                await this.loadEnvironmentVariablesFromFile(file);
-            }
-        }
     }
 
     private async loadEnvironmentVariablesFromFile(filePath: string) {
         try {
-            const fileContent = await fs.readFile(filePath, 'utf8');
+            const absolutePath = path.join(workspace.workspaceFolders![0].uri.fsPath, filePath);
+            const fileContent = await fs.readFile(absolutePath, 'utf8');
             const variables = JSON.parse(fileContent);
-            Object.assign(this.settings.environmentVariables, variables);
+            return variables
         } catch (error) {
             console.error(`Failed to load environment variables from file: ${filePath}`, error);
         }
@@ -89,4 +96,21 @@ export class EnvironmentController {
     public dispose() {
         this.environmentStatusEntry.dispose();
     }
+
+    private mergeObjects(obj1, obj2) {
+    const merged = { ...obj1 };
+    for (let key in obj2) {
+        if (obj2.hasOwnProperty(key)) {
+            if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object' 
+                && obj1[key] !== null && obj2[key] !== null) {
+                merged[key] = this.mergeObjects(obj1[key], obj2[key]);
+            } else {
+                merged[key] = obj2[key];
+            }
+        }
+    }
+
+    return merged;
+}
+
 }
